@@ -1,0 +1,270 @@
+/* ============================================
+   STADIUMAI — MICRO-ANIMATIONS & TRANSITIONS
+   ============================================ */
+
+/* ── ENTRANCE ANIMATIONS ────────────────────── */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounceIn {
+  from { opacity: 0; transform: scale(0.3); }
+  40%  { transform: scale(1.05); }
+  70%  { transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes flipIn {
+  from { opacity: 0; transform: rotateX(-20deg); }
+  to   { opacity: 1; transform: rotateX(0); }
+}
+
+/* ── UTILITY CLASSES ────────────────────────── */
+.animate-slide-left  { animation: slideInLeft  0.4s cubic-bezier(0.4,0,0.2,1) both; }
+.animate-slide-right { animation: slideInRight 0.4s cubic-bezier(0.4,0,0.2,1) both; }
+.animate-slide-up    { animation: slideInUp    0.4s cubic-bezier(0.4,0,0.2,1) both; }
+.animate-scale-in    { animation: scaleIn      0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
+.animate-bounce-in   { animation: bounceIn     0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+.animate-flip-in     { animation: flipIn       0.4s cubic-bezier(0.4,0,0.2,1) both; }
+
+/* Stagger delays */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+.delay-700 { animation-delay: 0.7s; }
+
+/* ── GLOW PULSES ────────────────────────────── */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(0,212,255,0.2); }
+  50%       { box-shadow: 0 0 40px rgba(0,212,255,0.5); }
+}
+
+@keyframes glowPulseOrange {
+  0%, 100% { box-shadow: 0 0 15px rgba(255,107,53,0.2); }
+  50%       { box-shadow: 0 0 40px rgba(255,107,53,0.5); }
+}
+
+@keyframes glowPulseGreen {
+  0%, 100% { box-shadow: 0 0 10px rgba(0,230,118,0.2); }
+  50%       { box-shadow: 0 0 30px rgba(0,230,118,0.5); }
+}
+
+.glow-pulse         { animation: glowPulse 2.5s ease-in-out infinite; }
+.glow-pulse-orange  { animation: glowPulseOrange 2.5s ease-in-out infinite; }
+.glow-pulse-green   { animation: glowPulseGreen 2s ease-in-out infinite; }
+
+/* ── FLOATING ANIMATION ─────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-12px) rotate(3deg); }
+}
+
+.float      { animation: float 3s ease-in-out infinite; }
+.float-slow { animation: floatSlow 5s ease-in-out infinite; }
+
+/* ── ORBIT ANIMATION ────────────────────────── */
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(40px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
+}
+
+/* ── NUMBER COUNTER ─────────────────────────── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.count-up { animation: countUp 0.5s ease both; }
+
+/* ── SCANLINE EFFECT ────────────────────────── */
+@keyframes scanline {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(100vh); }
+}
+
+/* ── GRADIENT SHIFT ─────────────────────────── */
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-animated {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* ── CHART DRAW ANIMATIONS ──────────────────── */
+@keyframes drawBar {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to   { transform: scaleY(1); transform-origin: bottom; }
+}
+
+.chart-bar-animated {
+  animation: drawBar 1s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* ── HERO BACKGROUND ORBS ───────────────────── */
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  animation: floatSlow 8s ease-in-out infinite;
+}
+
+.bg-orb-1 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(0,212,255,0.12), transparent);
+  top: -100px; right: 10%;
+  animation-delay: 0s;
+}
+
+.bg-orb-2 {
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(255,107,53,0.1), transparent);
+  bottom: 20%; left: 5%;
+  animation-delay: -3s;
+}
+
+.bg-orb-3 {
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(123,47,190,0.08), transparent);
+  top: 30%; right: 30%;
+  animation-delay: -5s;
+}
+
+/* ── LOADING STATES ─────────────────────────── */
+@keyframes wave {
+  0%   { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.skeleton-wave {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+  background-size: 200px 100%;
+  animation: wave 1.5s infinite;
+}
+
+/* ── CARD HOVER TRANSFORM ───────────────────── */
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+/* ── ROTATE ON HOVER ────────────────────────── */
+.hover-rotate { transition: transform 0.3s ease; }
+.hover-rotate:hover { transform: rotate(15deg); }
+
+/* ── SHINE EFFECT ───────────────────────────── */
+.shine-effect {
+  position: relative;
+  overflow: hidden;
+}
+.shine-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  transform: skewX(-15deg);
+  transition: left 0.6s ease;
+}
+.shine-effect:hover::after { left: 140%; }
+
+/* ── NEON BORDER ────────────────────────────── */
+@keyframes neonBorder {
+  0%, 100% { border-color: rgba(0,212,255,0.3); box-shadow: 0 0 8px rgba(0,212,255,0.2); }
+  50%       { border-color: rgba(0,212,255,0.7); box-shadow: 0 0 20px rgba(0,212,255,0.4); }
+}
+.neon-border { animation: neonBorder 3s ease-in-out infinite; }
+
+/* ── STAGGER CHILDREN ───────────────────────── */
+.stagger > *:nth-child(1) { animation-delay: 0.0s; }
+.stagger > *:nth-child(2) { animation-delay: 0.08s; }
+.stagger > *:nth-child(3) { animation-delay: 0.16s; }
+.stagger > *:nth-child(4) { animation-delay: 0.24s; }
+.stagger > *:nth-child(5) { animation-delay: 0.32s; }
+.stagger > *:nth-child(6) { animation-delay: 0.40s; }
+.stagger > *:nth-child(7) { animation-delay: 0.48s; }
+.stagger > *:nth-child(8) { animation-delay: 0.56s; }
+
+/* ── TYPEWRITER ─────────────────────────────── */
+@keyframes typeChar {
+  from { max-width: 0; }
+  to   { max-width: 100%; }
+}
+
+/* ── RIPPLE EFFECT ──────────────────────────── */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(0);
+  animation: rippleAnim 0.6s linear;
+  pointer-events: none;
+}
+@keyframes rippleAnim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ── DATA UPDATE FLASH ──────────────────────── */
+@keyframes dataFlash {
+  0%   { background: rgba(0,212,255,0.2); }
+  100% { background: transparent; }
+}
+.data-update { animation: dataFlash 0.8s ease; }
+
+/* ── STAR RATING ────────────────────────────── */
+@keyframes starPop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.star-animated { animation: starPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+/* ── REDUCED MOTION ─────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
