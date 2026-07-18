@@ -1397,3 +1397,6 @@ if (typeof document !== 'undefined') {
     }
   });
 }
+
+// Expose to global scope
+if (typeof window !== 'undefined') window.StadiumTests = StadiumTests;

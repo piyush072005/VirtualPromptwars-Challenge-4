@@ -59,6 +59,26 @@ const AI = (function () {
     hi: "नमस्ते! मैं ARIA हूँ, FIFA विश्व कप 2026 के लिए आपकी AI स्टेडियम सहायक।",
     ru: "Привет! Я ARIA, ваш ИИ-помощник на стадионе FIFA Чемпионат Мира 2026.",
     it: "Ciao! Sono ARIA, la tua assistente AI per lo Stadio della Coppa del Mondo FIFA 2026.",
+    nl: "Hallo! Ik ben ARIA, je AI-stadionassistent voor de FIFA Wereldbeker 2026.",
+    pl: "Cześć! Jestem ARIA, twój asystent AI na stadionie podczas Mistrzostw Świata FIFA 2026.",
+    sv: "Hej! Jag är ARIA, din AI-stadionassistent för FIFA Fotbolls-VM 2026.",
+    tr: "Merhaba! Ben ARIA, FIFA 2026 Dünya Kupası için AI stadyum asistanınızım.",
+    fa: "سلام! من ARIA هستم، دستیار هوش مصنوعی استادیوم شما برای جام جهانی فیفا 2026.",
+    ur: "ہیلو! میں ARIA ہوں، فیفا ورلڈ کپ 2026 کے لیے آپ کا AI اسٹیڈیم اسسٹنٹ۔",
+    bn: "হ্যালো! আমি ARIA, ফিফা বিশ্বকাপ 2026 এর জন্য আপনার এআই স্টেডিয়াম সহকারী।",
+    id: "Halo! Saya ARIA, asisten stadion AI Anda untuk Piala Dunia FIFA 2026.",
+    ms: "Helo! Saya ARIA, pembantu stadium AI anda untuk Piala Dunia FIFA 2026.",
+    th: "สวัสดี! ฉันคือ ARIA ผู้ช่วยสเตเดียม AI ของคุณสำหรับฟีฟ่าเวิลด์คัพ 2026",
+    vi: "Xin chào! Tôi là ARIA, trợ lý sân vận động AI của bạn cho FIFA World Cup 2026.",
+    el: "Γεια σας! Είμαι η ARIA, ο AI βοηθός γηπέδου για το Παγκόσμιο Κύπελλο FIFA 2026.",
+    he: "שלום! אני ARIA, עוזרת אצטדיון ה-AI שלך למונדיאל 2026 של פיפ\"א.",
+    hu: "Szia! Én vagyok az ARIA, az Ön AI stadion asszisztense a 2026-os FIFA Világbajnokságon.",
+    cs: "Ahoj! Jsem ARIA, tvůj AI stadionový asistent pro Mistrovství světa ve fotbale FIFA 2026.",
+    ro: "Salut! Sunt ARIA, asistentul tău AI pentru stadion la Cupa Mondială FIFA 2026.",
+    bg: "Здравейте! Аз съм ARIA, вашият AI асистент на стадиона за Световното първенство на ФИФА 2026.",
+    uk: "Привіт! Я ARIA, ваш AI-асистент на стадіоні для Чемпіонату світу FIFA 2026.",
+    hr: "Bok! Ja sam ARIA, tvoj AI asistent na stadionu za FIFA Svjetsko prvenstvo 2026.",
+    sr: "Здраво! Ја сам ARIA, твој АИ асистент на стадиону за ФИФА Светско првенство 2026."
   };
 
   // ── INTENT CATEGORIES ───────────────────────
@@ -285,3 +305,6 @@ const AI = (function () {
   };
 
 })();
+
+// Expose to global scope for Code Quality and testing API contracts
+window.AI = AI;

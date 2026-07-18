@@ -1045,3 +1045,6 @@ const App = (function () {
 
 // Boot
 document.addEventListener('DOMContentLoaded', () => App.init());
+
+// Expose to global scope for testing API contracts
+window.App = App;
