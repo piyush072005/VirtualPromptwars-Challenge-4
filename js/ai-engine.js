@@ -1,8 +1,21 @@
 // ============================================
 //   STADIUMAI — GenAI ENGINE
 //   Simulates LLM responses for all modules
+//   Interface contract compatible with:
+//   - Google Gemini Pro API
+//   - OpenAI GPT-4o API
+//   To swap to real AI: replace generateResponse()
+//   and streamResponse() internals only.
 // ============================================
 
+'use strict';
+
+/**
+ * @namespace AI
+ * @description Core AI engine for StadiumAI. Provides intent detection,
+ * response generation, streaming, and data generation for all platform modules.
+ * Implements the same interface contract as Google Gemini Pro or OpenAI GPT-4o APIs.
+ */
 const AI = (function () {
 
   // ── LANGUAGE RESPONSES ──────────────────────

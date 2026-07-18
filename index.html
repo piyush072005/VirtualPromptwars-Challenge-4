@@ -6,8 +6,12 @@
   <title>StadiumAI — FIFA World Cup 2026 Intelligence Platform</title>
   <meta name="description" content="GenAI-powered stadium intelligence platform for FIFA World Cup 2026. AI navigation, crowd management, multilingual assistance, and real-time operational support." />
   <meta name="keywords" content="FIFA World Cup 2026, stadium AI, crowd management, navigation, GenAI, fan experience" />
+  <meta name="author" content="StadiumAI Team" />
   <meta property="og:title" content="StadiumAI — FIFA World Cup 2026" />
   <meta property="og:description" content="AI-powered stadium operations & fan experience platform" />
+  <meta property="og:type" content="website" />
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';" />
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/main.css" />
@@ -19,11 +23,17 @@
 </head>
 <body>
 
+<!-- Skip Navigation Link for Screen Readers -->
+<a href="#main-content" class="skip-link" aria-label="Skip to main content">Skip to main content</a>
+
+<!-- Screen reader live announcement region -->
+<div id="aria-live-announcer" aria-live="polite" aria-atomic="true" role="status" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;"></div>
+
 <!-- ── PARTICLE BACKGROUND ──────────────────── -->
-<canvas id="particles-canvas"></canvas>
+<canvas id="particles-canvas" aria-hidden="true"></canvas>
 
 <!-- ── TOAST CONTAINER ──────────────────────── -->
-<div class="toast-container" id="toast-container"></div>
+<div class="toast-container" id="toast-container" aria-live="assertive" aria-atomic="true" role="alert"></div>
 
 <!-- ── APP LAYOUT ───────────────────────────── -->
 <div class="app-layout">
@@ -31,7 +41,7 @@
   <!-- ════════════════════════════════════════
        SIDEBAR
   ════════════════════════════════════════ -->
-  <aside class="sidebar">
+  <aside class="sidebar" aria-label="Application sidebar">
     <div class="sidebar-bg"></div>
 
     <!-- Logo -->
@@ -44,7 +54,7 @@
     </div>
 
     <!-- Navigation (rendered by JS) -->
-    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <nav class="sidebar-nav" id="sidebar-nav" aria-label="Main navigation" role="navigation"></nav>
 
     <!-- Live Match Widget -->
     <div class="sidebar-footer">
@@ -69,30 +79,34 @@
   <!-- ════════════════════════════════════════
        MAIN CONTENT
   ════════════════════════════════════════ -->
-  <main class="main-content">
+  <main class="main-content" id="main-content" role="main" aria-label="Stadium AI main content">
 
     <!-- Top Header -->
-    <header class="top-header">
+    <header class="top-header" role="banner">
       <div class="header-left">
-        <div class="page-breadcrumb">
-          StadiumAI / <span id="page-breadcrumb-name">Overview</span>
-        </div>
-        <div class="live-time" id="live-clock">--:--:--</div>
+        <nav aria-label="Breadcrumb" class="page-breadcrumb">
+          <ol style="list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:4px;">
+            <li>StadiumAI</li>
+            <li aria-hidden="true">/</li>
+            <li><span id="page-breadcrumb-name" aria-current="page">Overview</span></li>
+          </ol>
+        </nav>
+        <div class="live-time" id="live-clock" aria-label="Current time" aria-live="off">--:--:--</div>
       </div>
       <div class="header-right">
-        <div class="weather-widget">
-          <span>🌤️</span>
+        <div class="weather-widget" role="status" aria-label="Weather: 74 degrees Fahrenheit, partly cloudy, Inglewood">
+          <span aria-hidden="true">🌤️</span>
           <span>74°F · Inglewood</span>
         </div>
-        <div class="badge badge-live">
-          <span class="pulse-dot danger" style="width:6px;height:6px;margin-right:0;"></span>
+        <div class="badge badge-live" role="status" aria-label="Live event in progress">
+          <span class="pulse-dot danger" style="width:6px;height:6px;margin-right:0;" aria-hidden="true"></span>
           LIVE
         </div>
-        <button class="btn btn-sm btn-ghost" onclick="App.navigate('assistant')" style="font-size:0.78rem;">
+        <button class="btn btn-sm btn-ghost" onclick="App.navigate('assistant')" style="font-size:0.78rem;" aria-label="Open ARIA AI Assistant (Ctrl+K)" id="btn-open-aria">
           🤖 Ask ARIA
-          <kbd style="font-size:0.65rem;opacity:0.5;margin-left:4px;background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;">⌘K</kbd>
+          <kbd style="font-size:0.65rem;opacity:0.5;margin-left:4px;background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;" aria-hidden="true">⌘K</kbd>
         </button>
-        <div style="width:32px;height:32px;background:var(--grad-primary);border-radius:50%;display:grid;place-items:center;font-size:0.8rem;cursor:pointer;" data-tooltip="Logged in as Stadium Manager">SM</div>
+        <div role="img" style="width:32px;height:32px;background:var(--grad-primary);border-radius:50%;display:grid;place-items:center;font-size:0.8rem;cursor:pointer;" aria-label="Logged in as Stadium Manager" tabindex="0">SM</div>
       </div>
     </header>
 
@@ -346,25 +360,30 @@
                   </div>
                 </div>
 
-                <div class="chat-messages" id="chat-messages">
+                <div class="chat-messages" id="chat-messages" role="log" aria-live="polite" aria-label="Chat conversation with ARIA AI assistant" aria-relevant="additions">
                   <!-- Messages rendered by JS -->
                 </div>
 
-                <div class="chat-input-area">
-                  <div class="quick-prompts" id="quick-prompts">
-                    <button class="quick-prompt">Where is my seat?</button>
-                    <button class="quick-prompt">Best transport home</button>
-                    <button class="quick-prompt">Crowd status</button>
-                    <button class="quick-prompt">Accessibility help</button>
-                    <button class="quick-prompt">Live match score</button>
-                    <button class="quick-prompt">Nearest food court</button>
-                    <button class="quick-prompt">Green initiatives</button>
+                <div class="chat-input-area" role="form" aria-label="Send message to ARIA">
+                  <div class="quick-prompts" id="quick-prompts" role="group" aria-label="Quick question shortcuts">
+                    <button class="quick-prompt" aria-label="Ask: Where is my seat?">Where is my seat?</button>
+                    <button class="quick-prompt" aria-label="Ask: Best transport home">Best transport home</button>
+                    <button class="quick-prompt" aria-label="Ask: Crowd status">Crowd status</button>
+                    <button class="quick-prompt" aria-label="Ask: Accessibility help">Accessibility help</button>
+                    <button class="quick-prompt" aria-label="Ask: Live match score">Live match score</button>
+                    <button class="quick-prompt" aria-label="Ask: Nearest food court">Nearest food court</button>
+                    <button class="quick-prompt" aria-label="Ask: Green initiatives">Green initiatives</button>
                   </div>
                   <div class="chat-input-wrapper">
+                    <label for="chat-input" class="visually-hidden">Type your message to ARIA</label>
                     <textarea class="chat-input" id="chat-input"
-                      placeholder="Ask ARIA anything — navigation, transport, crowd, match info..." rows="1"></textarea>
-                    <button class="chat-send-btn" id="chat-send" title="Send message">
-                      ➤
+                      aria-label="Type your message to ARIA AI assistant"
+                      aria-describedby="chat-input-hint"
+                      placeholder="Ask ARIA anything — navigation, transport, crowd, match info..." rows="1"
+                      maxlength="2000"></textarea>
+                    <span id="chat-input-hint" class="visually-hidden">Press Enter to send, Shift+Enter for new line</span>
+                    <button class="chat-send-btn" id="chat-send" aria-label="Send message to ARIA">
+                      <span aria-hidden="true">➤</span>
                     </button>
                   </div>
                 </div>
@@ -488,8 +507,8 @@
                 <div class="section-title mb-md"><div class="title-icon">🔍</div>Find Your Way</div>
                 <div class="flex-col gap-md">
                   <div class="form-group">
-                    <label class="form-label">Your Current Location</label>
-                    <select class="form-select" id="nav-from">
+                    <label class="form-label" for="nav-from">Your Current Location</label>
+                    <select class="form-select" id="nav-from" aria-label="Select your current location">
                       <option>Main Entrance (North)</option>
                       <option>Gate 1</option><option>Gate 2</option><option>Gate 3</option>
                       <option>Gate 7</option><option>Gate 10</option>
@@ -497,8 +516,8 @@
                     </select>
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Destination</label>
-                    <select class="form-select" id="nav-to">
+                    <label class="form-label" for="nav-to">Destination</label>
+                    <select class="form-select" id="nav-to" aria-label="Select your destination">
                       <option>My Seat — Section A1, Row 12</option>
                       <option>Food Court 1 (North)</option>
                       <option>Medical Station</option>
@@ -512,16 +531,16 @@
                     </select>
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Accessibility Route</label>
-                    <select class="form-select" id="nav-access">
+                    <label class="form-label" for="nav-access">Accessibility Route Preference</label>
+                    <select class="form-select" id="nav-access" aria-label="Select accessibility route preference">
                       <option>Standard Route</option>
                       <option>Wheelchair Accessible</option>
                       <option>Elevator Required</option>
                       <option>Avoid Crowds (quiet route)</option>
                     </select>
                   </div>
-                  <button class="btn btn-primary w-full" id="nav-find-btn" onclick="handleNavSearch()">
-                    🤖 Get AI Route
+                  <button class="btn btn-primary w-full" id="nav-find-btn" onclick="handleNavSearch()" aria-label="Get AI-powered route recommendation">
+                    <span aria-hidden="true">🤖</span> Get AI Route
                   </button>
                 </div>
               </div>
@@ -1371,55 +1390,101 @@
         </div>
       </div>
 
+      <!-- ══════════════════════════════════════
+           PAGE: TEST SUITE
+      ══════════════════════════════════════ -->
+      <div id="page-tests" class="page">
+        <div class="page-container">
+          <div class="hero-badge mb-md animate-slide-up">🧪 Automated Test Suite · StadiumAI QA</div>
+          <h2 class="font-display animate-slide-up" style="font-size:1.6rem;margin-bottom:4px;">
+            Quality <span class="text-gradient">Assurance</span>
+          </h2>
+          <p class="text-secondary animate-slide-up delay-100" style="margin-bottom:var(--space-lg);">
+            Comprehensive automated tests covering AI engine, security, accessibility, integration, and performance.
+          </p>
+          <div id="test-results-container">
+            <div class="glass-card-static" style="padding:var(--space-xl);text-align:center;">
+              <div style="font-size:3rem;margin-bottom:var(--space-md);">⏳</div>
+              <div class="font-display" style="font-size:1.2rem;color:var(--color-primary);">Running tests...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- end page content -->
   </main>
 </div><!-- end app-layout -->
 
 <!-- ── INLINE SCRIPTS ────────────────────────── -->
 <script>
+  'use strict';
   // Navigation helper
   function handleNavSearch() {
-    const from = document.getElementById('nav-from')?.value || 'Main Entrance';
-    const to = document.getElementById('nav-to')?.value || 'Your Seat';
-    const access = document.getElementById('nav-access')?.value || 'Standard';
+    const fromEl = document.getElementById('nav-from');
+    const toEl = document.getElementById('nav-to');
+    const accessEl = document.getElementById('nav-access');
+    const from = fromEl ? fromEl.value : 'Main Entrance';
+    const to = toEl ? toEl.value : 'Your Seat';
+    const access = accessEl ? accessEl.value : 'Standard';
     const responseEl = document.getElementById('nav-ai-response');
     if (!responseEl) return;
 
-    responseEl.innerHTML = `<div class="ai-insight animate-scale-in">
-      <div class="ai-insight-icon" style="animation:spin 1s linear infinite;">🤖</div>
+    const safeFrom = typeof escapeHtml === 'function' ? escapeHtml(from) : from;
+    const safeTo = typeof escapeHtml === 'function' ? escapeHtml(to) : to;
+    const safeAccess = typeof escapeHtml === 'function' ? escapeHtml(access) : access;
+
+    responseEl.innerHTML = `<div class="ai-insight animate-scale-in" role="status" aria-live="polite">
+      <div class="ai-insight-icon" style="animation:spin 1s linear infinite;" aria-hidden="true">🤖</div>
       <div class="ai-insight-body">
         <div class="ai-insight-label">ARIA is calculating your route...</div>
         <div class="ai-insight-text">Analyzing crowd density, accessibility requirements, and shortest path...</div>
       </div>
     </div>`;
 
+    if (typeof announceToScreenReader === 'function') {
+      announceToScreenReader('ARIA is calculating your route, please wait.');
+    }
+
     setTimeout(() => {
-      const routes = [
-        `🗺️ **AI Route: ${from} → ${to}**\n\n**${access} Route Selected**\n\n**Step-by-step directions:**\n1. From **${from}**, head east on the Blue Corridor\n2. Pass the merchandise store (keep left)\n3. Take ${access.includes('Wheelchair') || access.includes('Elevator') ? 'the elevator at Gate 5' : 'the stairs at Section B'} to Level 2\n4. Follow yellow signs toward **${to}**\n5. Staff will assist you at the section entrance\n\n⏱️ **Estimated walk:** 4–6 minutes\n📊 **Current path density:** 🟢 Low — Clear route!\n\n💡 *AI Tip: Avoid the West Concourse — currently at 93% capacity.*`,
-      ];
-      responseEl.innerHTML = `<div class="ai-insight animate-scale-in">
-        <div class="ai-insight-icon">🗺️</div>
+      const elevatorLine = (safeAccess.includes('Wheelchair') || safeAccess.includes('Elevator'))
+        ? 'the elevator at Gate 5'
+        : 'the stairs at Section B';
+      const routeHtml = `<strong>AI Route: ${safeFrom} → ${safeTo}</strong><br><br><strong>${safeAccess} Route Selected</strong><br><br><strong>Step-by-step directions:</strong><br>1. From <strong>${safeFrom}</strong>, head east on the Blue Corridor<br>2. Pass the merchandise store (keep left)<br>3. Take ${elevatorLine} to Level 2<br>4. Follow yellow signs toward <strong>${safeTo}</strong><br>5. Staff will assist you at the section entrance<br><br>⏱️ <strong>Estimated walk:</strong> 4–6 minutes<br>📊 <strong>Current path density:</strong> 🟢 Low — Clear route!<br><br>💡 <em>AI Tip: Avoid the West Concourse — currently at 93% capacity.</em>`;
+      responseEl.innerHTML = `<div class="ai-insight animate-scale-in" role="status">
+        <div class="ai-insight-icon" aria-hidden="true">🗺️</div>
         <div class="ai-insight-body">
           <div class="ai-insight-label">ARIA Navigation — Route Found</div>
-          <div class="ai-insight-text">${routes[0].replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
+          <div class="ai-insight-text">${routeHtml}</div>
         </div>
       </div>`;
+      if (typeof announceToScreenReader === 'function') {
+        announceToScreenReader('Route found: ' + safeFrom + ' to ' + safeTo + '. Estimated walk: 4 to 6 minutes.');
+      }
     }, 1200);
   }
 
   function requestAssistance() {
-    const type = document.getElementById('assist-type')?.value;
-    const location = document.getElementById('assist-location')?.value;
+    const typeEl = document.getElementById('assist-type');
+    const locationEl = document.getElementById('assist-location');
+    const type = typeEl ? typeEl.value : '';
+    const location = locationEl ? locationEl.value : '';
     if (!type || type.includes('Select')) {
       App.showToast({ title: '⚠️ Select Type', body: 'Please select an assistance type first' }, 'warning');
       return;
     }
-    App.showToast({ title: '✅ Request Submitted', body: `${type} · Staff dispatched to: ${location || 'your location'} · ETA: 2–3 minutes` }, 'success', 6000);
+    const safeType = typeof escapeHtml === 'function' ? escapeHtml(type) : type;
+    const safeLocation = typeof escapeHtml === 'function' ? escapeHtml(location) : location;
+    App.showToast({ title: '✅ Request Submitted', body: `${safeType} · Staff dispatched to: ${safeLocation || 'your location'} · ETA: 2–3 minutes` }, 'success', 6000);
+    if (typeof announceToScreenReader === 'function') {
+      announceToScreenReader('Assistance request submitted. Staff dispatched. Estimated arrival: 2 to 3 minutes.');
+    }
   }
 </script>
 
-<!-- Scripts -->
+<!-- Scripts: load order matters -->
 <script src="js/ai-engine.js"></script>
+<script src="js/utils.js"></script>
 <script src="js/app.js"></script>
+<script src="js/tests.js"></script>
 </body>
 </html>

@@ -27,7 +27,8 @@ const App = (function () {
     transport:      { label: 'Transport',      icon: '🚌', breadcrumb: 'Smart Transport Planner' },
     accessibility:  { label: 'Accessibility',  icon: '♿', breadcrumb: 'Accessibility Center' },
     sustainability: { label: 'Sustainability', icon: '🌱', breadcrumb: 'Sustainability Intelligence' },
-    operations:     { label: 'Operations',     icon: '⚡', breadcrumb: 'Operational Command' }
+    operations:     { label: 'Operations',     icon: '⚡', breadcrumb: 'Operational Command' },
+    tests:          { label: 'Test Suite',     icon: '🧪', breadcrumb: 'Automated Test Suite' }
   };
 
   // ── NAVIGATION ───────────────────────────────
@@ -35,14 +36,23 @@ const App = (function () {
     if (!pages[pageId]) return;
     state.currentPage = pageId;
 
-    // Update nav items
+    // Update nav items with aria-current
     document.querySelectorAll('.nav-item').forEach(el => {
-      el.classList.toggle('active', el.dataset.page === pageId);
+      const isActive = el.dataset.page === pageId;
+      el.classList.toggle('active', isActive);
+      if (isActive) {
+        el.setAttribute('aria-current', 'page');
+      } else {
+        el.removeAttribute('aria-current');
+      }
     });
 
     // Update breadcrumb
     const breadcrumb = document.getElementById('page-breadcrumb-name');
-    if (breadcrumb) breadcrumb.textContent = pages[pageId].breadcrumb;
+    if (breadcrumb) {
+      breadcrumb.textContent = pages[pageId].breadcrumb;
+      breadcrumb.setAttribute('aria-current', 'page');
+    }
 
     // Show page
     document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
@@ -51,6 +61,11 @@ const App = (function () {
       pageEl.classList.add('active');
       // Trigger page-specific init
       PageInits[pageId]?.();
+    }
+
+    // Announce page change to screen readers
+    if (typeof announceToScreenReader === 'function') {
+      announceToScreenReader(`Navigated to ${pages[pageId].breadcrumb}`);
     }
   }
 
@@ -64,7 +79,8 @@ const App = (function () {
     transport:      initTransport,
     accessibility:  initAccessibility,
     sustainability: initSustainability,
-    operations:     initOperations
+    operations:     initOperations,
+    tests:          initTests
   };
 
   // ── CLOCK ────────────────────────────────────
@@ -216,7 +232,8 @@ const App = (function () {
     const sections = [
       { label: 'Fan Experience', items: ['dashboard', 'assistant', 'navigation', 'multilingual'] },
       { label: 'Stadium Intel', items: ['crowd', 'transport', 'accessibility'] },
-      { label: 'Management', items: ['sustainability', 'operations'] }
+      { label: 'Management', items: ['sustainability', 'operations'] },
+      { label: 'Quality Assurance', items: ['tests'] }
     ];
 
     const alertBadges = { crowd: '3', operations: '6' };
@@ -229,15 +246,26 @@ const App = (function () {
 
       section.items.forEach(pageId => {
         const page = pages[pageId];
+        const isActive = pageId === 'dashboard';
         const item = document.createElement('div');
-        item.className = `nav-item ${pageId === 'dashboard' ? 'active' : ''}`;
+        item.className = `nav-item ${isActive ? 'active' : ''}`;
         item.dataset.page = pageId;
+        item.setAttribute('role', 'link');
+        item.setAttribute('tabindex', '0');
+        if (isActive) item.setAttribute('aria-current', 'page');
+        item.setAttribute('aria-label', `Navigate to ${page.label}`);
         item.innerHTML = `
-          <span class="nav-icon">${page.icon}</span>
+          <span class="nav-icon" aria-hidden="true">${page.icon}</span>
           <span>${page.label}</span>
-          ${alertBadges[pageId] ? `<span class="nav-badge">${alertBadges[pageId]}</span>` : ''}
+          ${alertBadges[pageId] ? `<span class="nav-badge" aria-label="${alertBadges[pageId]} alerts">${alertBadges[pageId]}</span>` : ''}
         `;
         item.addEventListener('click', () => navigate(pageId));
+        item.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigate(pageId);
+          }
+        });
         addRipple(item);
         navEl.appendChild(item);
       });
@@ -357,19 +385,54 @@ const App = (function () {
     const sendBtn = document.getElementById('chat-send');
 
     function sendMessage() {
-      const text = inputEl.value.trim();
-      if (!text) return;
+      const rawText = inputEl.value;
+
+      // Validate and sanitize input
+      const sanitized = typeof sanitizeInput === 'function'
+        ? sanitizeInput(rawText)
+        : { valid: rawText.trim().length > 0, value: rawText.trim(), error: null };
+
+      if (!sanitized.valid) {
+        if (sanitized.error && rawText.trim().length > 0) {
+          showToast({ title: '⚠️ Input Error', body: sanitized.error }, 'warning');
+        }
+        return;
+      }
+
+      // Rate limiting check
+      const rateCheck = typeof checkRateLimit === 'function'
+        ? checkRateLimit()
+        : { allowed: true };
+
+      if (!rateCheck.allowed) {
+        showToast({
+          title: '⏳ Rate Limited',
+          body: `Too many messages. Please wait ${rateCheck.resetIn}s before sending again.`
+        }, 'warning');
+        return;
+      }
+
+      const text = sanitized.value;
       addUserMessage(text, chatMessages);
       inputEl.value = '';
       inputEl.style.height = 'auto';
       sendBtn.disabled = true;
+      sendBtn.setAttribute('aria-disabled', 'true');
       showTypingIndicator(chatMessages);
+
+      if (typeof announceToScreenReader === 'function') {
+        announceToScreenReader('ARIA is processing your message, please wait.');
+      }
 
       setTimeout(async () => {
         removeTypingIndicator(chatMessages);
         const response = AI.generateResponse(text, state.currentLang);
         await addAIMessageStream(response, chatMessages);
         sendBtn.disabled = false;
+        sendBtn.removeAttribute('aria-disabled');
+        if (typeof announceToScreenReader === 'function') {
+          announceToScreenReader('ARIA has responded to your message.');
+        }
       }, 800 + Math.random() * 600);
     }
 
@@ -385,7 +448,7 @@ const App = (function () {
     // Quick prompts
     document.querySelectorAll('.quick-prompt').forEach(btn => {
       btn.addEventListener('click', () => {
-        inputEl.value = btn.textContent;
+        inputEl.value = btn.textContent.trim();
         sendMessage();
       });
     });
@@ -394,22 +457,32 @@ const App = (function () {
     document.querySelectorAll('.lang-btn[data-lang]').forEach(btn => {
       btn.addEventListener('click', () => {
         state.currentLang = btn.dataset.lang;
-        document.querySelectorAll('.lang-btn[data-lang]').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.lang-btn[data-lang]').forEach(b => {
+          b.classList.remove('active');
+          b.removeAttribute('aria-pressed');
+        });
         btn.classList.add('active');
-        showToast({ title: '🌍 Language Changed', body: `Assistant switched to ${btn.querySelector('.lang-name').textContent}` }, 'success');
+        btn.setAttribute('aria-pressed', 'true');
+        const langName = btn.querySelector('.lang-name') ? btn.querySelector('.lang-name').textContent : btn.dataset.lang;
+        showToast({ title: '🌍 Language Changed', body: `Assistant switched to ${langName}` }, 'success');
+        if (typeof announceToScreenReader === 'function') {
+          announceToScreenReader(`Language changed to ${langName}`);
+        }
       });
     });
   }
 
   function addUserMessage(text, container) {
     const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const safeText = escapeHtml(text);
     const msg = document.createElement('div');
     msg.className = 'message user';
+    msg.setAttribute('role', 'listitem');
     msg.innerHTML = `
-      <div class="message-avatar user">👤</div>
+      <div class="message-avatar user" aria-hidden="true">👤</div>
       <div>
-        <div class="message-bubble">${escapeHtml(text)}</div>
-        <div class="message-time">${time}</div>
+        <div class="message-bubble">${safeText}</div>
+        <div class="message-time" aria-label="Sent at ${time}">${time}</div>
       </div>
     `;
     container.appendChild(msg);
@@ -418,13 +491,15 @@ const App = (function () {
 
   function addAIMessage(text, container) {
     const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const safeHtml = markdownToHtml(text);
     const msg = document.createElement('div');
     msg.className = 'message ai';
+    msg.setAttribute('role', 'listitem');
     msg.innerHTML = `
-      <div class="message-avatar ai">🤖</div>
+      <div class="message-avatar ai" aria-hidden="true">🤖</div>
       <div>
-        <div class="message-bubble">${markdownToHtml(text)}</div>
-        <div class="message-time">ARIA · ${time}</div>
+        <div class="message-bubble">${safeHtml}</div>
+        <div class="message-time" aria-label="ARIA responded at ${time}">ARIA · ${time}</div>
       </div>
     `;
     container.appendChild(msg);
@@ -436,15 +511,18 @@ const App = (function () {
     const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     const msg = document.createElement('div');
     msg.className = 'message ai';
+    msg.setAttribute('role', 'listitem');
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
-    bubble.innerHTML = '<span class="cursor-blink"></span>';
+    bubble.innerHTML = '<span class="cursor-blink" aria-hidden="true"></span>';
     const avatarEl = document.createElement('div');
     avatarEl.className = 'message-avatar ai';
     avatarEl.textContent = '🤖';
+    avatarEl.setAttribute('aria-hidden', 'true');
     const timeEl = document.createElement('div');
     timeEl.className = 'message-time';
     timeEl.textContent = `ARIA · ${time}`;
+    timeEl.setAttribute('aria-label', `ARIA responded at ${time}`);
     const contentDiv = document.createElement('div');
     contentDiv.appendChild(bubble);
     contentDiv.appendChild(timeEl);
@@ -456,7 +534,7 @@ const App = (function () {
     let fullText = '';
     await AI.streamResponse(text, (chunk) => {
       fullText += chunk;
-      bubble.innerHTML = markdownToHtml(fullText) + '<span class="cursor-blink"></span>';
+      bubble.innerHTML = markdownToHtml(fullText) + '<span class="cursor-blink" aria-hidden="true"></span>';
       container.scrollTop = container.scrollHeight;
     }, () => {
       bubble.innerHTML = markdownToHtml(fullText);
@@ -467,10 +545,12 @@ const App = (function () {
     const el = document.createElement('div');
     el.className = 'message ai';
     el.id = 'typing-indicator';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-label', 'ARIA is thinking');
     el.innerHTML = `
-      <div class="message-avatar ai">🤖</div>
+      <div class="message-avatar ai" aria-hidden="true">🤖</div>
       <div class="message-bubble" style="padding:8px 16px;">
-        <div class="typing-indicator">
+        <div class="typing-indicator" aria-hidden="true">
           <div class="typing-dot"></div>
           <div class="typing-dot"></div>
           <div class="typing-dot"></div>
@@ -891,12 +971,32 @@ const App = (function () {
     });
   }
 
+  // ── TEST SUITE INIT ────────────────────────────────
+  function initTests() {
+    const container = document.getElementById('test-results-container');
+    if (!container || container.dataset.initialized) return;
+    container.dataset.initialized = 'true';
+    if (typeof StadiumTests !== 'undefined') {
+      StadiumTests.run(container);
+    } else {
+      container.innerHTML = '<div class="glass-card-static" style="padding:var(--space-lg);color:var(--color-warning);">Test suite not loaded. Please ensure js/tests.js is included.</div>';
+    }
+  }
+
   // ── HELPER UTILITIES ─────────────────────────
   function escapeHtml(text) {
-    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (typeof window.escapeHtml === 'function') return window.escapeHtml(text);
+    if (!text) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   function markdownToHtml(text) {
+    if (typeof window.markdownToHtml === 'function') return window.markdownToHtml(text);
     return text
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
