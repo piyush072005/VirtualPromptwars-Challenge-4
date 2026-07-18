@@ -85,11 +85,11 @@ const App = (function () {
 
   // ── CLOCK ────────────────────────────────────
   function startClock() {
+    // Cache element once — getElementById inside a 1-second interval is wasteful
+    const timeEl = document.getElementById('live-clock');
     function update() {
-      const now = new Date();
-      const timeEl = document.getElementById('live-clock');
       if (timeEl) {
-        timeEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        timeEl.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       }
     }
     update();
@@ -98,12 +98,13 @@ const App = (function () {
 
   // ── LIVE MATCH TICKER ─────────────────────────
   function startMatchTicker() {
+    // Cache NodeList once; the set of .match-minute elements doesn't change at runtime
+    const minuteEls = document.querySelectorAll('.match-minute');
     setInterval(() => {
       if (state.matchTime < 90) {
         state.matchTime++;
-        document.querySelectorAll('.match-minute').forEach(el => {
-          el.textContent = `${state.matchTime}'`;
-        });
+        const label = `${state.matchTime}'`;
+        minuteEls.forEach(el => { el.textContent = label; });
       }
     }, 15000); // advance 1 minute every 15 seconds
   }
@@ -323,23 +324,25 @@ const App = (function () {
     const container = document.getElementById('mini-heatmap');
     if (!container) return;
     const data = AI.generateCrowdData();
+    // Batch all DOM writes in a DocumentFragment — single reflow instead of one per zone
+    const frag = document.createDocumentFragment();
+    const fills = [];
     data.forEach(zone => {
-      const level = zone.capacity > 90 ? 'critical' : zone.capacity > 75 ? 'high' : zone.capacity > 60 ? 'medium' : 'low';
+      const color = zone.capacity > 90 ? 'var(--color-danger)' : zone.capacity > 75 ? 'var(--color-warning)' : 'var(--color-success)';
       const bar = document.createElement('div');
       bar.innerHTML = `
         <div class="flex items-center justify-between" style="margin-bottom:6px;">
           <span style="font-size:0.78rem;color:var(--text-secondary);width:110px;flex-shrink:0;">${zone.name}</span>
           <div class="progress-bar flex-1 mx-2" style="margin:0 8px;">
-            <div class="progress-fill" style="width:0%;background:${zone.capacity > 90 ? 'var(--color-danger)' : zone.capacity > 75 ? 'var(--color-warning)' : 'var(--color-success)'};" data-target="${zone.capacity}"></div>
+            <div class="progress-fill" style="width:0%;background:${color};" data-target="${zone.capacity}"></div>
           </div>
-          <span style="font-size:0.78rem;font-family:var(--font-heading);color:${zone.capacity > 90 ? 'var(--color-danger)' : zone.capacity > 75 ? 'var(--color-warning)' : 'var(--color-success)'};">${zone.capacity}%</span>
+          <span style="font-size:0.78rem;font-family:var(--font-heading);color:${color};">${zone.capacity}%</span>
         </div>
       `;
-      container.appendChild(bar);
-      setTimeout(() => {
-        bar.querySelector('.progress-fill').style.width = zone.capacity + '%';
-      }, 300);
+      fills.push({ el: bar.querySelector('.progress-fill'), pct: zone.capacity });
+      frag.appendChild(bar);
     });
+    container.appendChild(frag);
   }
 
   function startInsightsTicker() {
@@ -531,13 +534,19 @@ const App = (function () {
     container.appendChild(msg);
     container.scrollTop = container.scrollHeight;
 
+    // Accumulate raw text during streaming; only call markdownToHtml once on complete.
+    // This avoids re-parsing the full growing string on every 3-char chunk tick.
     let fullText = '';
+    const cursor = '<span class="cursor-blink" aria-hidden="true"></span>';
     await AI.streamResponse(text, (chunk) => {
       fullText += chunk;
-      bubble.innerHTML = markdownToHtml(fullText) + '<span class="cursor-blink" aria-hidden="true"></span>';
+      // Show plain text while streaming (fast, no markdown overhead)
+      bubble.textContent = fullText;
+      bubble.insertAdjacentHTML('beforeend', cursor);
       container.scrollTop = container.scrollHeight;
     }, () => {
-      bubble.innerHTML = markdownToHtml(fullText);
+      // Final render: parse markdown exactly once
+      bubble.innerHTML = window.markdownToHtml(fullText);
     });
   }
 
@@ -688,7 +697,7 @@ const App = (function () {
             <div class="ai-insight-icon">🤖</div>
             <div class="ai-insight-body">
               <div class="ai-insight-label">ARIA Navigation AI</div>
-              <div class="ai-insight-text">${markdownToHtml(responses[Math.floor(Math.random()*responses.length)])}</div>
+              <div class="ai-insight-text">${window.markdownToHtml(responses[Math.floor(Math.random()*responses.length)])}</div>
             </div>
           </div>`;
         }
@@ -708,8 +717,11 @@ const App = (function () {
   function renderCrowdHeatmap(container) {
     container.innerHTML = '';
     const data = AI.generateCrowdData();
+    // Batch all card writes via DocumentFragment — one reflow for all 8 zones
+    const frag = document.createDocumentFragment();
     data.forEach((zone, i) => {
       const level = zone.capacity > 90 ? 'critical' : zone.capacity > 75 ? 'high' : zone.capacity > 60 ? 'medium' : 'low';
+      const color = zone.capacity > 90 ? 'var(--color-danger)' : zone.capacity > 75 ? 'var(--color-warning)' : 'var(--color-success)';
       const card = document.createElement('div');
       card.className = `glass-card stat-card animate-slide-up delay-${(i%6+1)*100}`;
       card.style.cursor = 'pointer';
@@ -718,17 +730,19 @@ const App = (function () {
           <span class="stat-label">${zone.name}</span>
           <span class="badge badge-${level === 'critical' ? 'danger' : level === 'high' ? 'warning' : level === 'medium' ? 'orange' : 'success'}">${level}</span>
         </div>
-        <div class="stat-value" style="color:${zone.capacity > 90 ? 'var(--color-danger)' : zone.capacity > 75 ? 'var(--color-warning)' : 'var(--color-success)'};">${zone.capacity}%</div>
+        <div class="stat-value" style="color:${color};">${zone.capacity}%</div>
         <div class="progress-bar mt-sm">
-          <div class="progress-fill" style="width:${zone.capacity}%;background:${zone.capacity > 90 ? 'var(--color-danger)' : zone.capacity > 75 ? 'var(--color-warning)' : 'var(--color-success)'};"></div>
+          <div class="progress-fill" style="width:${zone.capacity}%;background:${color};"></div>
         </div>
         <div class="flex items-center justify-between mt-sm">
           <span class="text-xs text-muted">Fan Count: ${Math.floor(zone.capacity * 180)}</span>
           <span class="stat-change ${zone.trend === 'up' ? 'up' : 'down'}">${zone.trend === 'up' ? '↑' : '↓'} ${zone.change}%</span>
         </div>
       `;
-      container.appendChild(card);
+
+      frag.appendChild(card);
     });
+    container.appendChild(frag);
   }
 
   function startLiveCrowdUpdates(container) {
@@ -868,16 +882,18 @@ const App = (function () {
     setInterval(updateTransportCountdown, 1000);
   }
 
+  // Cached once by initTransport before the interval starts
+  let _shuttleEl = null;
   function updateTransportCountdown() {
-    const el = document.getElementById('next-shuttle');
-    if (!el) return;
-    let secs = parseInt(el.dataset.secs || '840');
+    if (!_shuttleEl) _shuttleEl = document.getElementById('next-shuttle');
+    if (!_shuttleEl) return;
+    let secs = parseInt(_shuttleEl.dataset.secs || '840');
     secs = Math.max(0, secs - 1);
-    el.dataset.secs = secs;
+    _shuttleEl.dataset.secs = secs;
     const m = Math.floor(secs / 60);
     const s = secs % 60;
-    el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
-    if (secs === 0) el.dataset.secs = '900';
+    _shuttleEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+    if (secs === 0) _shuttleEl.dataset.secs = '900';
   }
 
   // ── ACCESSIBILITY INIT ────────────────────────
@@ -984,29 +1000,10 @@ const App = (function () {
   }
 
   // ── HELPER UTILITIES ─────────────────────────
-  function escapeHtml(text) {
-    if (typeof window.escapeHtml === 'function') return window.escapeHtml(text);
-    if (!text) return '';
-    return String(text)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  function markdownToHtml(text) {
-    if (typeof window.markdownToHtml === 'function') return window.markdownToHtml(text);
-    return text
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/\n\n/g, '<br><br>')
-      .replace(/\n/g, '<br>')
-      .replace(/\|(.+)\|/g, (match) => {
-        const cells = match.split('|').filter(c => c.trim());
-        return '<div style="font-family:var(--font-heading);font-size:0.8rem;background:var(--bg-elevated);border-radius:4px;padding:4px 8px;margin:4px 0;">' + cells.join(' · ') + '</div>';
-      });
-  }
+  // Delegate directly to the pre-optimised versions in utils.js.
+  // The local wrapper functions have been removed to eliminate the extra call hop.
+  const escapeHtml    = window.escapeHtml;
+  const markdownToHtml = window.markdownToHtml;
 
   // ── INIT ─────────────────────────────────────
   function init() {

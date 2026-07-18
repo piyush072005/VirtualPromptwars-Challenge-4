@@ -10,6 +10,33 @@
 
 'use strict';
 
+// ── PRE-COMPILED FILL-TEMPLATE PATTERNS ─────────
+// Built once at module load; reused on every fillTemplate() call.
+const _TMPL_SECTIONS  = ['A1', 'B3', 'C7', 'D12', 'E4', 'F9', 'G2'];
+const _TMPL_GATES     = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const _TMPL_RE = {
+  section:  /{section}/g,
+  gate:     /{gate}/g,
+  altGate:  /{altGate}/g,
+  bestGate: /{bestGate}/g,
+  level:    /{level}/g,
+  row:      /{row}/g,
+  seat:     /{seat}/g,
+  time:     /{time}/g,
+  distance: /{distance}/g,
+  stadium:  /{stadium}/g,
+  capacity: /{capacity}/g,
+  peakTime: /{peakTime}/g,
+  queueTime:/{queueTime}/g,
+  code:     /{code}/g,
+};
+
+// ── PRE-BUILT INTENT LOOKUP MAP ──────────────────
+// Built once at module load: keyword → intent string.
+// detectIntent() can then do a single per-word Map.get() instead of
+// iterating over every intent array on every call.
+let _INTENT_MAP; // populated after INTENTS is defined (see end of INTENTS block)
+
 /**
  * @namespace AI
  * @description Core AI engine for StadiumAI. Provides intent detection,
@@ -91,33 +118,36 @@ const AI = (function () {
   // ── DETECT INTENT ────────────────────────────
   function detectIntent(text) {
     const lower = text.toLowerCase();
+    // Split on word boundaries and look up each word in the pre-built Map
+    const words = lower.split(/\W+/);
+    for (const word of words) {
+      const intent = _INTENT_MAP.get(word);
+      if (intent) return intent;
+    }
+    // Fallback: substring scan for multi-word keywords (e.g. "first aid")
     for (const [intent, keywords] of Object.entries(INTENTS)) {
-      if (keywords.some(kw => lower.includes(kw))) {
-        return intent;
-      }
+      if (keywords.some(kw => kw.includes(' ') && lower.includes(kw))) return intent;
     }
     return 'general';
   }
 
   // ── FILL TEMPLATE ────────────────────────────
   function fillTemplate(template) {
-    const sections = ['A1', 'B3', 'C7', 'D12', 'E4', 'F9', 'G2'];
-    const gates = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     return template
-      .replace(/{section}/g, sections[Math.floor(Math.random() * sections.length)])
-      .replace(/{gate}/g, gates[Math.floor(Math.random() * gates.length)])
-      .replace(/{altGate}/g, gates[Math.floor(Math.random() * gates.length)])
-      .replace(/{bestGate}/g, gates[Math.floor(Math.random() * gates.length)])
-      .replace(/{level}/g, Math.floor(Math.random() * 3) + 1)
-      .replace(/{row}/g, Math.floor(Math.random() * 40) + 1)
-      .replace(/{seat}/g, Math.floor(Math.random() * 30) + 1)
-      .replace(/{time}/g, Math.floor(Math.random() * 8) + 2)
-      .replace(/{distance}/g, Math.floor(Math.random() * 200) + 50)
-      .replace(/{stadium}/g, 'SoFi Stadium, Inglewood')
-      .replace(/{capacity}/g, Math.floor(Math.random() * 20) + 75)
-      .replace(/{peakTime}/g, '19:00–20:00')
-      .replace(/{queueTime}/g, Math.floor(Math.random() * 5) + 1)
-      .replace(/{code}/g, Math.floor(Math.random() * 9000) + 1000);
+      .replace(_TMPL_RE.section, _TMPL_SECTIONS[Math.floor(Math.random() * _TMPL_SECTIONS.length)])
+      .replace(_TMPL_RE.gate, _TMPL_GATES[Math.floor(Math.random() * _TMPL_GATES.length)])
+      .replace(_TMPL_RE.altGate, _TMPL_GATES[Math.floor(Math.random() * _TMPL_GATES.length)])
+      .replace(_TMPL_RE.bestGate, _TMPL_GATES[Math.floor(Math.random() * _TMPL_GATES.length)])
+      .replace(_TMPL_RE.level, Math.floor(Math.random() * 3) + 1)
+      .replace(_TMPL_RE.row, Math.floor(Math.random() * 40) + 1)
+      .replace(_TMPL_RE.seat, Math.floor(Math.random() * 30) + 1)
+      .replace(_TMPL_RE.time, Math.floor(Math.random() * 8) + 2)
+      .replace(_TMPL_RE.distance, Math.floor(Math.random() * 200) + 50)
+      .replace(_TMPL_RE.stadium, 'SoFi Stadium, Inglewood')
+      .replace(_TMPL_RE.capacity, Math.floor(Math.random() * 20) + 75)
+      .replace(_TMPL_RE.peakTime, '19:00–20:00')
+      .replace(_TMPL_RE.queueTime, Math.floor(Math.random() * 5) + 1)
+      .replace(_TMPL_RE.code, Math.floor(Math.random() * 9000) + 1000);
   }
 
   // ── GENERATE RESPONSE ────────────────────────
@@ -130,19 +160,21 @@ const AI = (function () {
 
   // ── STREAM RESPONSE ──────────────────────────
   async function streamResponse(text, onChunk, onComplete) {
-    const words = text.split('');
+    // Slice directly from the source string — avoids allocating an N-char array
+    // just to re-join every 3 elements.
+    const len = text.length;
     let index = 0;
     const CHUNK_SIZE = 3;
     const DELAY_MS = 12;
 
     return new Promise(resolve => {
       function next() {
-        if (index >= words.length) {
+        if (index >= len) {
           if (onComplete) onComplete();
           resolve();
           return;
         }
-        const chunk = words.slice(index, index + CHUNK_SIZE).join('');
+        const chunk = text.slice(index, index + CHUNK_SIZE);
         if (onChunk) onChunk(chunk);
         index += CHUNK_SIZE;
         setTimeout(next, DELAY_MS);
@@ -227,6 +259,18 @@ const AI = (function () {
   }
 
   // ── PUBLIC API ───────────────────────────────
+  // Build the flat intent-lookup Map now that INTENTS is defined
+  _INTENT_MAP = new Map();
+  for (const [intent, keywords] of Object.entries(INTENTS)) {
+    // Only add single-word keywords to the Map; multi-word ones fall through
+    // to the substring fallback in detectIntent()
+    for (const kw of keywords) {
+      if (!kw.includes(' ') && !_INTENT_MAP.has(kw)) {
+        _INTENT_MAP.set(kw, intent);
+      }
+    }
+  }
+
   return {
     detectIntent,
     generateResponse,
